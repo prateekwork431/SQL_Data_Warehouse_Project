@@ -1,0 +1,131 @@
+/*
+Stored Procedure: Load Bronze Layer (Source -> Bronze)
+Script Purpose: This stored procedure loads data into the 'bronze'
+It performs the following actions:
+Truncates the bronze tables before loading data.
+schema from external CSV files.
+Uses the BULK INSERTS command to load data from csv Files to bronze tables.
+Parameters:
+None.
+This stored procedure does not accept any parameters or return any values.
+Usage Example:
+EXEC bronze. load bronze;
+*/
+
+CREATE or ALTER PROCEDURE bronze.load_bronze AS
+BEGIN
+
+	BEGIN TRY
+	PRINT '***********************************'
+	PRINT 'LOADING BRONZE LAYER INITIATED'
+	PRINT '***********************************'
+
+	    --loading CRM TABLE
+		-- INSERT CRM_CUST_INFO
+		declare @start_time datetime , @end_time datetime, @start_time2 datetime,  @end_time2 datetime ,@start_time_batch datetime, @end_time_batch datetime
+		set @start_time_batch = getdate();
+		SET @start_time = getdate();
+		PRINT '-----------------------------------'
+		PRINT 'Loading CRM Table Initiated'
+		PRINT '-----------------------------------'
+		DELETE from Bronze.crm_cust_info
+		bulk insert Bronze.crm_cust_info
+		from 'C:\Users\prate\OneDrive\Documents\SQL files\sql-data-warehouse-project\datasets\source_crm\cust_info.csv'
+		with
+			(
+			firstrow = 2,
+			fieldterminator  = ',',
+			tablock
+			)
+		
+		--INSERT CRM_PRD_INFO
+
+		DELETE from Bronze.crm_prd_info
+		bulk insert Bronze.crm_prd_info
+		FROM 'C:\Users\prate\OneDrive\Documents\SQL files\sql-data-warehouse-project\datasets\source_crm\prd_info.csv'
+		WITH
+			(
+			firstrow = 2,
+			fieldterminator  = ',',
+			tablock
+			)
+		
+
+		--INSTER CRM_SALES_DETALS
+		DELETE from Bronze.crm_sales_details
+		bulk insert Bronze.crm_sales_details
+		FROM 'C:\Users\prate\OneDrive\Documents\SQL files\sql-data-warehouse-project\datasets\source_crm\sales_details.csv'
+		with
+			(
+			firstrow = 2,
+			fieldterminator  = ',',
+			tablock
+			)
+		SET @end_time = getdate();
+
+		PRINT '-----------------------------------'
+		PRINT 'Loading CRM Table Completed'		
+		PRINT 'Load Duration:' + cast(datediff(second,@start_time, @end_time) as nvarchar)+' seconds';
+        PRINT '-----------------------------------'
+		--LOADING ERP TABLE
+
+		-- INSTER ERP_CUST_AZ12
+		PRINT '-----------------------------------'
+		PRINT 'Loading ERP Table Initiated'
+		PRINT '-----------------------------------'
+		set @start_time2 = getdate();
+		DELETE from Bronze.erp_cust_az12;
+		bulk insert Bronze.erp_cust_az12
+		FROM 'C:\Users\prate\OneDrive\Documents\SQL files\sql-data-warehouse-project\datasets\source_erp\CUST_AZ12.csv'
+		WITH
+			(
+			firstrow = 2,
+			fieldterminator  = ',',
+			tablock
+			)
+
+
+		--INSERT ERP_LOCAL_A101
+		DELETE from Bronze.erp_loc_a101
+		bulk insert Bronze.erp_loc_a101
+		FROM 'C:\Users\prate\OneDrive\Documents\SQL files\sql-data-warehouse-project\datasets\source_erp\LOC_A101.csv'
+		WITH
+			(
+			firstrow = 2,
+			fieldterminator  = ',',
+			tablock
+			)
+
+
+		--INSERT ERP_PX_CAT_G1V2
+		DELETE from Bronze.erp_px_cat_g1v2
+		bulk insert Bronze.erp_px_cat_g1v2
+		FROM 'C:\Users\prate\OneDrive\Documents\SQL files\sql-data-warehouse-project\datasets\source_erp\PX_CAT_G1V2.csv'
+		WITH
+			(
+			firstrow = 2,
+			fieldterminator  = ',',
+			tablock
+			)
+		SET @end_time2 = getdate();
+		PRINT '-----------------------------------'
+		PRINT 'Loading ERP Table Completed'
+		PRINT'Load Duration:' + CAST(DATEDIFF(SECOND,@start_time2, @end_time2)AS NVARCHAR)+ ' Seconds';
+		PRINT '-----------------------------------'
+		SET @end_time_batch = getdate();
+
+
+	PRINT '***********************************'
+	PRINT 'LOADING BRONZE LAYER COMPLETED'
+	PRINT'Load Duration:' + CAST(DATEDIFF(SECOND,@start_time_batch, @end_time_batch)AS NVARCHAR)+ ' Seconds';
+
+	PRINT '***********************************'
+
+	END TRY
+	BEGIN CATCH 
+		PRINT 'Error occured during loading the BRONZE layer'
+		PRINT 'ERROR MESSAGE' + ERROR_MESSAGE();
+		PRINT ' ERROR NUMBER: '+CAST(ERROR_NUMBER() AS VARCHAR)
+
+	END CATCH
+END
