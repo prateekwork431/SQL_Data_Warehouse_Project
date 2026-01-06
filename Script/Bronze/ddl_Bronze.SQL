@@ -13,6 +13,20 @@ Run this script to re-define the DDL structure of 'bronze' Tables
 
 --CREATING TABLES AND DROPPING THEM IF THEY ALREADY EXIST
 
+if object_id ('bronze.crm_cust_info', 'U') is not null
+drop table bronze.crm_cust_info
+GO
+
+Create table bronze.crm_cust_info(
+	  cst_id int,
+	  cst_key nvarchar (50),
+      cst_firstname nvarchar (50),
+      cst_lastname nvarchar (50),
+      cst_marital_status nvarchar (50),
+      cst_gndr nvarchar (50),
+      cst_create_date date
+);
+
 -- CREATING crm_prd_info TABLE
 if object_id ('bronze.crm_prd_info', 'U') is not null
 drop table bronze.crm_prd_info
